@@ -144,8 +144,9 @@ ggplotly()
 # We control with using consumption growth, and inflation as a measure of economic performance
 # This model should satisfy strict exogeneity as a change in SP500 returns should not effect the FED RATE
 
-model = dynlm(SP500_DIFF ~ FEDFUNDS_DIFF + L(FEDFUNDS_DIFF, 1:6) + CONSUMPTION_DIFF + log_inflation + SAVINGS_DIFF + INFLATION_EXPECTATIONS_5Y_DIFF, 
+model = dynlm(SP500_DIFF ~  d(L(log(FEDFUNDS), 0:5)) + L(log(FEDFUNDS), 6) + CONSUMPTION_DIFF + log_inflation + SAVINGS_DIFF + INFLATION_EXPECTATIONS_5Y_DIFF, 
               data=data.ts)
+
 summary(model)
 ggAcf(residuals(model))
 ggPacf(residuals(model))
@@ -199,5 +200,3 @@ summary(var.model)
 # TREASURY1Y_DIFF Granger-cause's log_inflation but not the other way around
 causality(var.model, "log_inflation")$Granger
 causality(var.model, interest_rate)$Granger
-
-
