@@ -1,0 +1,78 @@
+FRED_data:
+  CPILFESL:
+    name: CPI
+    difference: FALSE
+    log: FALSE
+    download: True
+  SP500:
+    name: SP500
+    difference: True
+    log: True
+    download: True
+  GS1:
+    name: TREASURY1Y
+    difference: True
+    log: True
+    download: True
+  DTB3:
+    name: TREASURY3M
+    difference: True
+    log: True
+    download: True
+  MCOILWTICO:
+    name: OIL_WTI
+    difference: True
+    log: FALSE
+    download: True
+  PCE:
+    name: CONSUMPTION
+    difference: True
+    log: True
+    download: True
+  UNRATE:
+    name: UNEMPLOYMENT
+    difference: True
+    log: FALSE
+    download: True
+  PSAVERT:
+    name: SAVINGS
+    difference: True
+    log: FALSE
+    download: True
+  FEDFUNDS:
+    name: FEDFUNDS
+    difference: True
+    log: True
+    download: True
+  T5YIEM:
+    name: INFLATION_EXPECTATIONS_5Y
+    difference: True
+    log: FALSE
+    download: True
+  REAL_INTEREST_3M:
+    name: REAL_INTEREST_3M
+    difference: True
+    log: FALSE
+    download: FALSE
+  REAL_INTEREST_1Y:
+    name: REAL_INTEREST_1Y
+    difference: True
+    log: FALSE
+    download: FALSE
+  REAL_INTEREST_10Y:
+    name: REAL_INTEREST_10Y
+    difference: True
+    log: FALSE
+    download: FALSE
+  CPI: 
+    name: log_inflation
+    difference: FALSE
+    log: FALSE
+    download: FALSE
+  GS10:
+    name: TREASURY10Y
+    difference: True
+    log: True
+    download: True
+
+  
