@@ -12,6 +12,7 @@ library(car)
 library(tseries)
 library(dynlm)
 library(plotly)
+library(yaml)
 
 source("src/helpers.R")
 
@@ -65,19 +66,7 @@ data_pipeline = function() {
     }
   }
   
-  # h[["CPILFESL"]] = "CPI"
-  # h[["SP500"]] = "SP500"
-  # h[["GS1"]] = "TREASURY1Y"
-  # h[["GS10"]] = "TREASURY10Y"
-  # h[["DTB3"]] = "TREASURY3M" # https://fred.stlouisfed.org/series/GS3M
-  # h[["GS2"]] = "TREASURY2Y"
-  # h[["WILL5000IND"]] = "Stock_Index" 
-  # h[["MCOILWTICO"]] = "OIL_WTI"
-  # h[["PCE"]] = "CONSUMPTION"
-  # h[["UNRATE"]] = "UNEMPLOYMENT"
-  # h[["PSAVERT"]] = "SAVINGS" # https://fred.stlouisfed.org/series/PSAVERT
-  # h[["FEDFUNDS"]] = "FEDFUNDS" # https://fred.stlouisfed.org/series/FEDFUNDS
-  # h[["T5YIEM"]] = "INFLATION_EXPECTATIONS_5Y" #https://fred.stlouisfed.org/series/T5YIEM
+
   data = get_data(h)
   
   
@@ -91,20 +80,7 @@ data_pipeline = function() {
   #data$REAL_INTEREST_2Y = data$TREASURY2Y - data$log_inflation
   data$REAL_INTEREST_10Y = data$TREASURY10Y - data$log_inflation
   
-  # Log difference data
-  # difference_list = c("TREASURY1Y", "TREASURY3M", "TREASURY2Y", "TREASURY10Y", "SP500", "Stock_Index", "OIL_WTI", 
-  #                     "REAL_INTEREST_3M", 
-  #                     "REAL_INTEREST_1Y",
-  #                     "REAL_INTEREST_2Y",
-  #                     "REAL_INTEREST_10Y",
-  #                     "CONSUMPTION",
-  #                     "UNEMPLOYMENT",
-  #                     "SAVINGS",
-  #                     "FEDFUNDS",
-  #                     "INFLATION_EXPECTATIONS_5Y"
-  #                     )
-  # 
-  # log_difference = c(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, F, T, F)
+
   
   print(data)
   for (data_item in data_config_fred %>% names()) {
@@ -113,9 +89,7 @@ data_pipeline = function() {
       data = difference_data(data, get("name", config), log_diff = get("log", config))
     }
   }
-  # for (ind in seq(length(difference_list))) {
-  #   data = difference_data(data, difference_list[ind], log_diff = log_difference[ind])
-  # }
+
   
   # Log transform TREASURY1Y
   data$log_TREASURY1Y = data$TREASURY1Y %>% log()
@@ -131,17 +105,4 @@ data_pipeline = function() {
   return(data)
 }
 
-library(yaml)
-yo = yaml.load_file("./data_config/data_config.yaml")
-yo
-for (item in yo$FRED_data) {
-  print(typeof(item))
-    
-  
-}
-names(yo$FRED_data)
 
-for (i in yo$FRED_data[1]){
-  print(i)
-}
-get("PSAVERT",yo$FRED_data)
