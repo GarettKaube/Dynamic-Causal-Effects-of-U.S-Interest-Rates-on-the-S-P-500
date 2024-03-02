@@ -3,3 +3,4 @@ Estimating Dynamic Causal Effects of U.S Interest Rates on the S&amp;P 500 using
 
 ## Goal: 
 See how the change of the FED rate or other measures of interest rates affect the returns on S&P 500 over time on a monthly basis.
+Also using structural vector autoregressions to assess how monetary policy shocks effect the S&P 500
