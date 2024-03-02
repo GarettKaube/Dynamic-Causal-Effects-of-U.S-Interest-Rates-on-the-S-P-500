@@ -21,6 +21,9 @@ library(readtext)
 source("src/helpers.R")
 source("src/data.R")
 
+# to do:
+# get firm inventories
+
 
 code = readLines("./FRED/fred-api-key.txt")
 fredr_set_key(code)
@@ -141,10 +144,15 @@ ggplotly()
 
 # Linear models
 
-# We control with using consumption growth, and inflation as a measure of economic performance
-# This model should satisfy strict exogeneity as a change in SP500 returns should not effect the FED RATE
+# notice that the correlation between consumption and unemployment is high:
+cor(data[,c("UNEMPLOYMENT_DIFF", "CONSUMPTION_DIFF")])
+# so we will include only CONSUMPTION_DIFF in the model
 
-model = dynlm(SP500_DIFF ~  d(L(log(FEDFUNDS), 0:5)) + L(log(FEDFUNDS), 6) + CONSUMPTION_DIFF + log_inflation + SAVINGS_DIFF + INFLATION_EXPECTATIONS_5Y_DIFF, 
+# We control with using consumption growth, and inflation as a measure of economic performance
+# This model would not satisfy strict exogeneity as a change in SP500 returns should not effect the FED RATE but SP500 may 
+# respond to future forecasts of inflation and hence a change in FED RATE.
+n_lags = 7
+model = dynlm(SP500_DIFF ~  d(L(FEDFUNDS_DIFF, 0:7)) + L(FEDFUNDS_DIFF, 7) + CONSUMPTION_DIFF + log_inflation + SAVINGS_DIFF + INFLATION_EXPECTATIONS_5Y_DIFF, 
               data=data.ts)
 
 summary(model)
@@ -164,9 +172,22 @@ coeftest(model, vcov. = nw)
 # Inflation may not always move the same direction as the S&P500 as if we have a negative supply shock, output will decrease,
 # inflation will rise, and weak economic conditions may cause the S&P500 to fall due to weak consumer demand and investment.
 
-residual_plot("FEDFUNDS_DIFF", model, data=data.ts,lags=7)
-residual_plot("log_inflation", model, data=data.ts,lags=7)
-residual_plot("CONSUMPTION_DIFF", model, data=data.ts,lags=7)
+residual_plot("FEDFUNDS_DIFF", model, data=data.ts,lags=6)
+residual_plot("log_inflation", model, data=data.ts,lags=6)
+residual_plot("CONSUMPTION_DIFF", model, data=data.ts,lags=6)
+
+
+# F-test with HAC errors
+res_model <- dynlm(SP500_DIFF ~ 1, data=data[7:dim(data)[1], ])
+waldtest(model, 
+         res_model, 
+         vcov = NeweyWest(model, lag = m, prewhite = F))
+
+
+res_model <- update(model, formula = . ~ . - CONSUMPTION_DIFF - log_inflation)
+waldtest(model, 
+         res_model, 
+         vcov = NeweyWest(model, lag = m, prewhite = F))
 
 model = dynlm(SP500_DIFF ~ REAL_INTEREST_3M_DIFF + d(L(REAL_INTEREST_3M_DIFF, 1:6)) + COVID + CONSUMPTION_DIFF, data=data.ts)
 # C
@@ -176,27 +197,65 @@ m = ceiling(0.75 * (dim(data.ts)[1])**(1/3))
 nw = NeweyWest(model, lag = m, prewhite = F)
 coeftest(model, vcov. = nw)
 
-#"CONSUMPTION_DIFF","log_inflation","SAVINGS_DIFF","INFLATION_EXPECTATIONS_5Y_DIFF"
-y = data.ts[,"SP500_DIFF"]
-model = auto.arima(y, xreg=data.ts[, c("REAL_INTEREST_3M_DIFF", "REAL_INTEREST_3M_DIFF1", "REAL_INTEREST_3M_DIFF2", "REAL_INTEREST_3M_DIFF3", 
-                                       "REAL_INTEREST_3M_DIFF4","REAL_INTEREST_3M_DIFF5","REAL_INTEREST_3M_DIFF6")])
-summary(model)
-coeftest(model)
-# log_inflation, TREASURY1Y_DIFF VECTOR AUTOREGRESSION
+#-----------------------------------------------------
+#------------ VECTOR AUTOREGRESSIONs-----------------
+#-----------------------------------------------------
 library(vars)
 
-interest_rate = "REAL_INTEREST_1Y_DIFF"
+interest_rate = "FEDFUNDS_DIFF"
 
-var_data = data.ts[, c("log_inflation", interest_rate)]
+TYPE = 'const'
+
+var_data = data.ts[, c("log_inflation", "UNEMPLOYMENT_DIFF", interest_rate, "SP500_DIFF")]
 print(ccf(var_data[, "log_inflation"], var_data[, interest_rate], lag.max=10))
 autoplot(var_data, facets = TRUE, colour=TRUE)
 
-VARselect(var_data, lag.max = 6,type = "const")[["selection"]]
+VARselect(var_data, lag.max = 6,type=TYPE)[["selection"]]
 
-var.model = VAR(var_data, p=1, type="const")
+var.model = VAR(var_data, p=2, type=TYPE)
 serial.test(var.model, lags.pt = 10, type="PT.asymptotic")
 summary(var.model)
 
 # TREASURY1Y_DIFF Granger-cause's log_inflation but not the other way around
 causality(var.model, "log_inflation")$Granger
 causality(var.model, interest_rate)$Granger
+
+# look at impulse response function 
+
+impulse = irf(
+  var.model, 
+  impulse = interest_rate,
+  response = "log_inflation",
+  n.ahead = 10,
+  ortho = FALSE,
+  runs = 1000
+  )
+plot(impulse)
+
+# Estimate structural var
+a = diag(1, 4)
+a[lower.tri(a)] = NA
+a
+svar = SVAR(var.model, Amat = a, max.iter = 20000)
+svar
+summary(svar)
+
+
+# svar 2
+var_data = data.ts[, c("log_inflation", interest_rate, "SP500_DIFF")]
+print(ccf(var_data[, "log_inflation"], var_data[, interest_rate], lag.max=10))
+autoplot(var_data, facets = TRUE, colour=TRUE)
+
+VARselect(var_data, lag.max = 6,type=TYPE)[["selection"]]
+
+var.model = VAR(var_data, p=1, type=TYPE)
+serial.test(var.model, lags.pt = 10, type="PT.asymptotic")
+summary(var.model)
+
+a = diag(1, 3)
+a[lower.tri(a)] = NA
+a
+svar = SVAR(var.model, Amat = a, max.iter = 10000)
+svar
+summary(svar)
+
