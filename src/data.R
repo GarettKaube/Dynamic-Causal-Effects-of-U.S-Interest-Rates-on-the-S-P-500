@@ -16,7 +16,9 @@ library(yaml)
 
 source("src/helpers.R")
 
-fredr_set_key("9a048a276f1a939a1e64c77f214e5684")
+code = readLines("./FRED/fred-api-key.txt")
+fredr_set_key(code)
+
 
 
 get_data = function(hash_funct, start_=as.Date("2010-01-01")) {
@@ -71,14 +73,15 @@ data_pipeline = function() {
   
   
   # Create inflation variable
-  data = difference_data(data, "CPI", log=TRUE) %>% 
-    dplyr::rename("log_inflation" = "CPI_DIFF")
+  data = data %>% mutate(inflation = (CPI/lag(CPI, n=12L) - 1))
+  # data = pct_change(data, "CPI")
+  #   dplyr::rename("inflation" = "CPI_DIFF")
   
   # Ex-post
-  data$REAL_INTEREST_3M = data$TREASURY3M - data$log_inflation
-  data$REAL_INTEREST_1Y = data$TREASURY1Y - data$log_inflation
-  #data$REAL_INTEREST_2Y = data$TREASURY2Y - data$log_inflation
-  data$REAL_INTEREST_10Y = data$TREASURY10Y - data$log_inflation
+  data$REAL_INTEREST_3M = data$TREASURY3M - data$inflation
+  data$REAL_INTEREST_1Y = data$TREASURY1Y - data$inflation
+  #data$REAL_INTEREST_2Y = data$TREASURY2Y - data$inflation
+  data$REAL_INTEREST_10Y = data$TREASURY10Y - data$inflation
   
 
   
@@ -96,7 +99,7 @@ data_pipeline = function() {
   
   # Calculate average return of SP500
   data = calculate_average_return("SP500", data)
-  data = lag_data(data, c("TREASURY1Y_DIFF", "TREASURY3M_DIFF", "REAL_INTEREST_3M_DIFF", "FEDFUNDS_DIFF"), lags=c(6,6,6))
+  data = lag_data(data, c("TREASURY1Y_DIFF", "TREASURY3M_DIFF", "REAL_INTEREST_3M_DIFF", "FEDFUNDS_DIFF"), lags=c(6,6,6,7))
 
  
   
