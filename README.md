@@ -2,7 +2,7 @@
 Estimating Dynamic Causal Effects of U.S Interest Rates on the S&amp;P 500 using R
 
 ## Goal: 
-See how the change of the FED rate or other measures of interest rates affect the returns on S&P 500 over time on a monthly basis.
+See how the unanticipated change of the FED rate affect the returns on S&P 500 over time on a monthly basis.
 ## Process and Results:
 Starts with obtaining data from FRED and Yahoo finance such as S&P 500 prices, FED FUNDS effective rate, Fed Funds futures, personal consumption,
 and more macro data.
