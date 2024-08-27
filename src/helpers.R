@@ -1,13 +1,10 @@
-
 extract_year = function(x) {
   return(format(as.Date(x), format = "%Y"))
 }
 
-
 extract_month = function(x) {
   return(format(as.Date(x), format = "%m"))
 }
-
 
 
 residual_plot = function(var, model, lags = 1, data){
@@ -37,13 +34,8 @@ lag_data = function(data, columns, lags = rep(1,length(columns))) {
   return(data)
 }
 
-# test lag_data
-test_data = data[1:10 ,c("REAL_INTEREST_1Y_DIFF", "REAL_INTEREST_3M_DIFF")]
-lag_data(test_data, colnames(test_data), lags=c(2, 3))
-
 
 difference_data = function(data, var, log_diff = FALSE, lag = 1) {
-  print(var)
   name = paste0(var, "_DIFF")
   if (!log_diff) {
 
@@ -57,25 +49,22 @@ difference_data = function(data, var, log_diff = FALSE, lag = 1) {
 }
 
 pct_change = function(data, var) {
-  print(var)
-  data %>% mutate()
-  
   data[, paste0(var, "_DIFF")] = c(NA, data[, var] %>% diff(lag = 12)) / (data[, var] %>% lag(n=12L))
   
 }
 
-
-calculate_average_return = function(name, df) {
+calculate_average_sp500_return = function(df, return_period) {
   series1 = fredr(series_id="SP500", observation_start=as.Date("1950-01-01"), frequency='d') %>% 
-     drop_cols(name=name) %>% 
+     drop_cols(name="SP500") %>% 
     as.data.frame()
   series1[, 'year'] = series1[, 'date'] %>% sapply(extract_year)
   series1[, 'month'] = series1[, 'date'] %>% sapply(extract_month)
+  
   df[, 'year'] = df[, 'date'] %>% sapply(extract_year)
   df[, 'month'] = df[, 'date'] %>% sapply(extract_month)
   
   series1 = na.omit(series1)
-  series1[, "RET"] = 1+(c(NA, diff(series1[, name])) / lag(series1[, name]))
+  series1[, "RET"] = 1+(c(NA, diff(series1[, "SP500"])) / lag(series1[, "SP500"], n=return_period))
   series1$log_RET = series1$RET %>% log()
   
   series1 = series1 %>% na.omit()
@@ -107,13 +96,4 @@ plot_fitted_and_weights = function(model, data, predictor, target) {
 }
 
 
-covid_dummy = function(x) {
-  x = as.Date(x)
-  if (x == as.Date("2020-03-01")) {
-    return(1)
-  }
-  else {
-    return(0)
-  }
-}
 
