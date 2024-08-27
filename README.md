@@ -5,7 +5,8 @@ Estimating Dynamic Causal Effects of U.S Interest Rates on the S&amp;P 500 using
 See how the unanticipated change of the FED rate affect the returns on S&P 500 over time on a monthly basis.
 ## Process and Results:
 Starts with obtaining data from FRED and Yahoo finance such as S&P 500 prices, FED FUNDS effective rate, Fed Funds futures, personal consumption,
-and more macro data.
+and more macro data. Almost all data is differenced or converted to percent change. Some data such as the S&P 500 prices are log 
+transformed to steady non constant variance.
 The Fed Funds futures is used to estimate anticipated and uninticipated rate changes as described in Bernanke and Kuttner, 2005.
 
 We start out with a dynamic linear model with lags in the FED FUNDS effective rate and the other control variables which led
