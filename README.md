@@ -6,7 +6,8 @@ See how the unanticipated change of the FED rate affect the returns on S&P 500 o
 ## Process and Results:
 Starts with obtaining data from FRED and Yahoo finance such as S&P 500 prices, FED FUNDS effective rate, Fed Funds futures, personal consumption,
 and more macro data. Almost all data is differenced or converted to percent change. Some data such as the S&P 500 prices are log 
-transformed to steady non constant variance.
+transformed to steady non constant variance. S&P 500 prices are converted to log returns and FED FUNDS effective rate is converted 
+to percent change in FED FUNDS effective rate and these are the variables used in the models.
 The Fed Funds futures is used to estimate anticipated and uninticipated rate changes as described in Bernanke and Kuttner, 2005.
 
 We start out with a dynamic linear model with lags in the FED FUNDS effective rate and the other control variables which led
