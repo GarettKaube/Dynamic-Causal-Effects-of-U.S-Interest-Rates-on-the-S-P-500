@@ -8,7 +8,7 @@ FRED_data:
     name: SP500
     difference: True
     log: True
-    download: True
+    download: FALSE
   GS1:
     name: TREASURY1Y
     difference: True
@@ -39,15 +39,15 @@ FRED_data:
     difference: True
     log: FALSE
     download: True
+  VIXCLS:
+    name: VOLATILITY_INDEX
+    difference: True
+    log: TRUE
+    download: TRUE
   FEDFUNDS:
     name: FEDFUNDS
-    difference: True
-    log: True
-    download: True
-  T5YIEM:
-    name: INFLATION_EXPECTATIONS_5Y
-    difference: True
-    log: FALSE
+    difference: False
+    log: False
     download: True
   REAL_INTEREST_3M:
     name: REAL_INTEREST_3M
@@ -74,5 +74,16 @@ FRED_data:
     difference: True
     log: True
     download: True
+  PAYEMS:
+    name: NONE_FARM_PAYROLLS
+    difference: True
+    log: True
+    download: True
+  GDP:
+    name: NOMINAL_GDP
+    difference: True
+    log: True
+    download: False
+
 
   
