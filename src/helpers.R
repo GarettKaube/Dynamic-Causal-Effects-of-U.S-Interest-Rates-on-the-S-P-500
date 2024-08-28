@@ -9,15 +9,14 @@ extract_month = function(x) {
 
 residual_plot = function(var, model, lags = 1, data){
   print(data[lags, var])
-  df = data.frame(var = data[(lags+1):dim(data)[1], var] ,res=residuals(model))
+  df = data.frame(var = data[(lags+1):dim(data)[1], var], res=residuals(model))
   ggplot(data = df, aes(x=var, y=res)) +
     geom_point(color='skyblue') +
     theme_minimal() +
     labs(y= "Residuals", x = var) +
     geom_smooth(method='lm', se=F)
-  
-  
 }
+
 
 lag_data = function(data, columns, lags = rep(1,length(columns))) {
   for (i in 1:length(columns)) {
@@ -95,5 +94,42 @@ plot_fitted_and_weights = function(model, data, predictor, target) {
   print(plot)
 }
 
+covid_dummy = function(x) {
+  if (x >= as.Date("2020-03-01") & x <= as.Date("2021-12-01")){
+    return(1)
+  }
+  else {
+    return(0)
+  }
+}
+
+
+# Assess multicollinearity 
+get_VIF = function(predictors, data) {
+  # Initialize VIF data frame
+  VIF = data.frame()
+  for (i in 1:(length(predictors))) {
+    target = predictors[i]
+    
+    # Get predictors
+    predictors_modified = predictors[-c(i)]
+    
+    # Create regression formulas
+    predictor_str = predictors_modified[1]
+    predictors_modified = predictors_modified[-c(1)]
+    for (pred in predictors_modified) {
+      predictor_str = predictor_str %>% paste("+") %>% paste(pred)
+    }
+    
+    formula = paste(target, "~") %>% paste(predictor_str) 
+    print(paste("Model: ",formula))
+    
+    # Regress, get R-Squared and calculate Variance factors
+    r2 = summary(lm({{formula}}, data = data))$r.squared
+    VIF[1, paste(formula, "|")] =  1/(1-r2)
+    
+  }
+  return(VIF)
+}
 
 
