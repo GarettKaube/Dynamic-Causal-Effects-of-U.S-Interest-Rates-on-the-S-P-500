@@ -4,12 +4,11 @@ source("src/data.R")
 
 data = data_pipeline()
 row.names(data) = 1:dim(data)[1]
-data = data %>% filter((date <= as.Date("2019-01-01") & date >= as.Date("2002-01-01")))
+data = data %>% filter(date >= as.Date("2002-01-01"))
 data$anticipated = as.numeric(data$anticipated)
 # Note: SP500_DIFF is in log differences, i.e log returns
 
 data.ts = ts(dplyr::select(data, -c("date")), start = c(2002, data[1, "month"]), freq=12)
-data.ts = window(data.ts, end = c(2019,1))
 
 line_color = "#ADD8E6"
 
@@ -21,7 +20,9 @@ plot_timeseries = function(series, name) {
 }
 
 # Plot time series of some of the variables
-plot_timeseries(data.ts[, "VOLATILITY_INDEX_DIFF"], "OIL")
+plot_timeseries(data.ts[, "FEDFUNDS_DIFF_logs"], "OIL")
+plot_timeseries(data.ts[, "VOLATILITY_INDEX_DIFF"], "Volatility change")
+plot_timeseries(data.ts[, "VOLATILITY_INDEX"], "Volatility")
 plot_timeseries(diff(log(data.ts[, "OIL_WTI"])), "OIL")
 plot_timeseries(data.ts[, "TREASURY10Y_DIFF"], "TREASURY10Y Differenced")
 plot_timeseries(data.ts[, "CONSUMPTION_DIFF"], "CONSUMPTION Growth")
