@@ -15,6 +15,7 @@ library(plotly)
 library(yaml)
 library(quantmod)
 library(lubridate)
+library(seasonal)
 
 source("src/helpers.R")
 
@@ -78,6 +79,17 @@ get_nom_gdp = function(start_=as.Date("1960-01-01")) {
 }
 
 
+seasonally_adjust = function(data, first_date) {
+  return(
+    as.data.frame(
+      final(
+        seas(ts(data, start= c(year(first_date), month(first_date), 1), freq=12 ), x11 = "")
+      )
+    )
+  )
+}
+
+
 data_pipeline = function() {
   h = hash()
   
@@ -118,8 +130,13 @@ data_pipeline = function() {
   # MOM inflation
   data = difference_data(data, "CPI", lag = 1, log_diff = TRUE) %>% 
     dplyr::rename("log_inflation_MOM" = "CPI_DIFF")
+   
+  # Seasonally adjust data
+  first_date = as.Date(first(data$date))
+  data["VOLATILITY_INDEX"] = seasonally_adjust(data["VOLATILITY_INDEX"], first_date)
+  data["OIL_WTI"] = seasonally_adjust(data["OIL_WTI"], first_date)
+  data["SP500"] = seasonally_adjust(data["SP500"], first_date)
   
-
   for (data_item in data_config_fred %>% names()) {
     config = get(data_item, data_config_fred)
     if (get("difference", config) == TRUE) {
@@ -127,10 +144,9 @@ data_pipeline = function() {
     }
   }
   
-  # Log transform TREASURY1Y
-  data$log_TREASURY1Y = data$TREASURY1Y %>% log()
-  
   data$FEDFUNDS_DIFF = (data$FEDFUNDS - lag(data$FEDFUNDS))/lag(data$FEDFUNDS)
+  data$FEDFUNDS_DIFF_logs = log(data$FEDFUNDS) - log(lag(data$FEDFUNDS))
+  #data$SP500_RETURNS = (data$SP500 - lag(data$SP500))/lag(data$SP500)
   
   # Using method from Bernanke and Kuttner, 2005 to derive anticipated fed rate changes
   data$FEDFUNDS_FUTURES_DIFF = (data$FEDFUNDS_FUTURES - lag(data$FEDFUNDS_FUTURES))/lag(data$FEDFUNDS_FUTURES)
