@@ -12,8 +12,13 @@ The Fed Funds futures is used to estimate anticipated and uninticipated rate cha
 A vector autoregression is used to derive the amount of "surprise" there is in realized log inflation, and consumption growth where
 the residuals of the model are the surprise. These residuals are used as controls in the linear model.
 
-We start out with a dynamic linear model with lags in the FED FUNDS effective rate and the other control variables which led
-to an impulse response on S&P500 returns that is negativaly effected and recovers quickly:
+We start out with a dynamic linear model with lags in the FED FUNDS effective rate and the other control variables:
+
+$$\Delta \log(SP500_t) = \beta_0 + \sum_{l=0}^{10}\beta_{1+l} \Delta FEDFUNDS_{t-l} + \beta_{11} \epsilon^ {\pi} _ {t} + \beta_{12} \epsilon ^{\Delta C}_{t} + \beta _{13} \epsilon ^{\Delta U} _{t}  + \beta _{14} \Delta VIX _{t} + \beta  _{15}COVID + \beta _{16} ANTICIPATED$$
+
+Where $\epsilon^ {\pi} _ {t}$ is surprise in inflation, $\epsilon ^{\Delta C}_{t}$ surprise in consumption growth, and $\epsilon ^{\Delta U} _{t}$, surprise change in unemployment. 
+
+The model resulted in an impulse response on S&P500 returns that is negativaly effected and recovers quickly:
 ![image](https://github.com/user-attachments/assets/7e5c5ffc-9625-4981-bafc-fced5d1da650)
 
 
