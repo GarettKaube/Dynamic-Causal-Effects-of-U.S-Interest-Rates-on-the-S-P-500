@@ -18,6 +18,12 @@ $$\Delta \log(SP500_t) = \beta_0 + \sum_{l=0}^{10}\beta_{1+l} \Delta FEDFUNDS_{t
 
 Where $\epsilon^ {\pi} _ {t}$ is surprise in inflation, $\epsilon ^{\Delta C}_{t}$ surprise in consumption growth, and $\epsilon ^{\Delta U} _{t}$, surprise change in unemployment. 
 
+The epsilons are defined from the VAR: 
+
+$\boldsymbol{\epsilon}_t = \boldsymbol{y}_t - (\boldsymbol{\phi}_0 + \sum _{p=1}^{l}\boldsymbol{\Phi} _p \boldsymbol{y} _{t-p})$, 
+
+where $\boldsymbol{y}_t = (\Delta C_t, \pi, \Delta U, \Delta 10yeartreasury) $.
+
 The model resulted in an impulse response on S&P500 returns that is negativaly effected and recovers quickly:
 ![image](https://github.com/user-attachments/assets/7e5c5ffc-9625-4981-bafc-fced5d1da650)
 
