@@ -34,4 +34,8 @@ The VAR's impulse response function for a shock of Percent change in FED FUNDS e
 yielded a similmar response as the dynamic linear model's dynamic multipliers:
 ![image](https://github.com/user-attachments/assets/53bd0919-b5db-4d71-b60a-7b3485887d7b)
 
+References:
+
+1. BERNANKE, B.S. and KUTTNER, K.N. (2005), What Explains the Stock Market's Reaction to Federal Reserve Policy?. The Journal of Finance, 60: 1221-1257. https://doi.org/10.1111/j.1540-6261.2005.00760.x
+
 
