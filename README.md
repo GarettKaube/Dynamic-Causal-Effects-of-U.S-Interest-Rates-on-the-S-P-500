@@ -14,15 +14,21 @@ the residuals of the model are the surprise. These residuals are used as control
 
 We start out with a dynamic linear model with lags in the FED FUNDS effective rate and the other control variables:
 
-$$\Delta \log(SP500_t) = \beta_0 + \sum_{l=0}^{10}\beta_{1+l} \Delta FEDFUNDS_{t-l} + \beta_{11} \epsilon^ {\pi} _ {t} + \beta_{12} \epsilon ^{\Delta C}_{t} + \beta _{13} \epsilon ^{\Delta U} _{t}  + \beta _{14} \Delta VIX _{t} + \beta  _{15}COVID _t + \beta _{16} ANTICIPATED _t + u _t$$
+$$
+\\begin{align}
+        \Delta\log(\text{SP500})_ t = \beta_{0} + 
+        \sum_{l=0}^{11}\beta_{l+1}\Delta \text{FEDFUNDS}_{t-l} + 
+        \boldsymbol{\\beta}^T \boldsymbol{x} + \\epsilon_t
+\\end{align}
+$$
 
-Where $\epsilon^ {\pi} _ {t}$ is surprise in inflation, $\epsilon ^{\Delta C}_{t}$ surprise in consumption growth, and $\epsilon ^{\Delta U} _{t}$, surprise change in unemployment. 
+Where $\boldsymbol{x}$ contains: $\epsilon^ {\pi} _ {t}$ surprise in inflation, $\epsilon ^{\Delta C}_{t}$ surprise in consumption growth, and $\epsilon ^{\Delta U} _ {t}$, surprise change in unemployment $\epsilon ^{\Delta S} _{t}$ surprise in savings growth, anticipated FED rate change dummy, and TREASURY10Y differenced. 
 
 The epsilons are defined from the VAR: 
 
 $\boldsymbol{\epsilon}_t = \boldsymbol{y}_t - (\boldsymbol{\phi}_0 + \sum _{p=1}^{l}\boldsymbol{\Phi} _p \boldsymbol{y} _{t-p})$, 
 
-where $\boldsymbol{y}_t = (\Delta C_t, \pi, \Delta U, \Delta 10yeartreasury) $.
+where $\boldsymbol{y}_t = (\Delta C_t, \pi, \Delta U, \Delta 10yeartreasury, \Delta S) $.
 
 The model resulted in an impulse response on S&P500 returns that is negativaly effected and recovers quickly:
 ![image](https://github.com/user-attachments/assets/7e5c5ffc-9625-4981-bafc-fced5d1da650)
