@@ -1,3 +1,5 @@
+library(vars)
+
 extract_year = function(x) {
   return(format(as.Date(x), format = "%Y"))
 }
@@ -6,6 +8,12 @@ extract_month = function(x) {
   return(format(as.Date(x), format = "%m"))
 }
 
+format_fred_data = function(data, name) {
+  data = data %>% 
+    dplyr::select(c("date", "value")) %>% 
+    rename(!!sym(name) := value)
+  return(data)  
+}
 
 residual_plot = function(var, model, lags = 1, data){
   print(data[lags, var])
@@ -95,7 +103,16 @@ plot_fitted_and_weights = function(model, data, predictor, target) {
 }
 
 covid_dummy = function(x) {
-  if (x >= as.Date("2020-03-01") & x <= as.Date("2021-12-01")){
+  if (x >= as.Date("2020-03-01") & x <= as.Date("2020-12-01")){
+    return(1)
+  }
+  else {
+    return(0)
+  }
+}
+
+inflation_dummy = function(x) {
+  if (x >= as.Date("2021-01-01") & x <= as.Date("2022-11-01")){
     return(1)
   }
   else {
@@ -130,6 +147,73 @@ get_VIF = function(predictors, data) {
     
   }
   return(VIF)
+}
+
+
+get_adf_p_values = function(data) {
+  # Returns a dataframe of the p values from an ADF test for each 
+  # series in the provided data
+  stats = data.frame(column=character(0), p_value=numeric(0))
+  for (col in colnames(data)) {
+    series_ = data[, col]
+    if (is.numeric(series_)) {
+      result = adf.test(series_)
+      result = data.frame(column = col, p_value = result$p.value)
+      stats = rbind(stats, result)
+    }
+  }
+  return(stats)
+}
+
+plot_coef = function(model, lags) {
+  lags=11
+  coef_df = data.frame(coef(model)[2:(lags+2)])
+  coef_df=rownames_to_column(coef_df, var="coefficient")
+  ggplot(data = coef_df, aes(x=1:(lags+1), y=coef.model..2..lags...2.., group=1)) +
+    geom_line(color="Dodgerblue")+
+    theme(axis.text.x = element_text(angle = 65, hjust = 1)) +
+    ylab("Coefficient") +
+    xlab("Lag") + 
+    ggtitle("Dynamic Effect of Fed Effective Rate on S&P500") +
+    theme_minimal()  
+}
+
+get_surprise_vars = function(data.ts) {
+  
+  TYPE = 'const'
+  variables = c("log_inflation_DIFF", 
+                "CONSUMPTION_DIFF", 
+                "UNEMPLOYMENT_DIFF", 
+                "SAVINGS_DIFF",
+                "TREASURY10Y_DIFF")
+  var_data = data.ts[, variables]
+  
+  # Select lag that minimizes HQ (Hannan–Quinn information criterion)
+  selection = vars::VARselect(
+    var_data, 
+    lag.max=6, 
+    type=TYPE
+  )[["selection"]]
+  
+  var.model = vars::VAR(var_data, p=selection[2], type=TYPE)
+  
+  # Join the residuals to the original data
+  surprise = residuals(var.model)
+  new_col_names = c()
+  for (i in 1:length(variables)) {
+    new_col_names[i] = paste0(variables[i], "_surprise")
+  }
+  colnames(surprise) = new_col_names
+  combined = cbind(
+    as.data.frame(data.ts), 
+    rbind(
+      matrix(rep(NA, 5*selection[2]), nrow=selection[2], ncol = 5), 
+      surprise
+    )
+  )
+  combined  = na.omit(combined)
+  combined.ts = ts(combined , start = c(2001, combined[1, "month"]), freq=12)
+  return(combined.ts)
 }
 
 
