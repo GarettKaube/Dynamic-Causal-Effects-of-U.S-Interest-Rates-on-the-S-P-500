@@ -20,7 +20,6 @@ library(seasonal)
 source("src/helpers.R")
 
 code = readLines("./FRED/fred-api-key.txt")
-code
 fredr_set_key(code)
 
 get_fred_data = function(hash_funct, start_=as.Date("1960-01-01")) {
@@ -29,8 +28,8 @@ get_fred_data = function(hash_funct, start_=as.Date("1960-01-01")) {
   # Download time series and store them in a list
   series_list = list()
   for (i in seq_along(series_ids)) {
-    series = fredr(series_id=series_ids[i], observation_start=start_, frequency='m') %>% 
-      drop_cols(name=hash_funct[[series_ids[i]]])
+    series = fredr(series_id=series_ids[i], observation_start=start_, frequency='m') %>%
+      format_fred_data(name=hash_funct[[series_ids[i]]])
     series_list = append(series_list, list(series))
   }
   
@@ -74,7 +73,7 @@ get_yahoo_data = function(symbol, var_name) {
 
 get_nom_gdp = function(start_=as.Date("1960-01-01")) {
   series = fredr(series_id="GDP", observation_start=start_, frequency='q') %>% 
-    drop_cols(name="NOMINAL_GDP")
+    format_fred_data(name="NOMINAL_GDP")
   return(series)
 }
 
@@ -114,8 +113,14 @@ data_pipeline = function() {
     }
   }
   data = get_fred_data(h)
+  
+  # Get S&P 500 price data
   sp500 = get_yahoo_data("^GSPC", "SP500")
-  futures = get_yahoo_data('ZQ=F', "FEDFUNDS_FUTURES")
+  
+  # Get FED FUNDS Futures data
+  futures = get_yahoo_data('ZQ=F', "FEDFUNDS_FUTURES") %>% 
+    fill(FEDFUNDS_FUTURES, .direction="down")
+  
   gdp = get_nom_gdp()
   
   data = merge(data, sp500, by="date")
@@ -137,6 +142,7 @@ data_pipeline = function() {
   data["OIL_WTI"] = seasonally_adjust(data["OIL_WTI"], first_date)
   data["SP500"] = seasonally_adjust(data["SP500"], first_date)
   
+  # Difference and log transform data if needed
   for (data_item in data_config_fred %>% names()) {
     config = get(data_item, data_config_fred)
     if (get("difference", config) == TRUE) {
@@ -150,9 +156,9 @@ data_pipeline = function() {
   
   # Using method from Bernanke and Kuttner, 2005 to derive anticipated fed rate changes
   data$FEDFUNDS_FUTURES_DIFF = (data$FEDFUNDS_FUTURES - lag(data$FEDFUNDS_FUTURES))/lag(data$FEDFUNDS_FUTURES)
-  data$unanticipated_rate = (100 - data$FEDFUNDS_FUTURES) - (100 - lag(data$FEDFUNDS_FUTURES))
-  data$anticipated_rate = c(NA, diff(data$FEDFUNDS)) - data$unanticipated_rate
-  data$anticipated = data$anticipated_rate <= 0.0025 & data$anticipated_rate >= -0.0025
+  data$anticipated_rate = (100 - data$FEDFUNDS_FUTURES) - (100 - lag(data$FEDFUNDS_FUTURES))
+  data$anticipated_rate_FEDFUNDS_diff = c(NA, diff(data$FEDFUNDS)) - data$anticipated_rate
+  data$anticipated = data$anticipated_rate_FEDFUNDS_diff <= 0.0025 & data$anticipated_rate_FEDFUNDS_diff >= -0.0025
   
   # Create date variables
   data[, 'year'] = data[, 'date'] %>% sapply(extract_year)
@@ -161,6 +167,12 @@ data_pipeline = function() {
   # Remove NA
   data$FEDFUNDS_DIFF_DIFF = c(NA, base::diff(data$FEDFUNDS_DIFF))
   data$log_inflation_DIFF = c(NA, base::diff(data$log_inflation))
+  
+  # Lag anticipated for vector autoregression 
+  data = data %>% mutate(
+    anticipated_lag1 = lag(anticipated)
+  )
+  
   data = na.omit(data)
   return(data)
 }
