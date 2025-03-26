@@ -1,9 +1,11 @@
 library(tidyverse)
 library(fredr)
+library(ggthemes)
 source("src/data.R")
 
 data = data_pipeline()
 row.names(data) = 1:dim(data)[1]
+data
 data = data %>% filter(date >= as.Date("2002-01-01"))
 data$anticipated = as.numeric(data$anticipated)
 # Note: SP500_DIFF is in log differences, i.e log returns
@@ -13,9 +15,14 @@ data.ts = ts(dplyr::select(data, -c("date")), start = c(2002, data[1, "month"]),
 line_color = "#ADD8E6"
 
 plot_timeseries = function(series, name) {
-  plot = autoplot(series, color=line_color) + 
+  plot = autoplot(series, color=line_color, size=1) + 
     theme_minimal() +
-    ylab(name)
+    ylab(name) +
+    theme(
+      axis.title = element_text(size = 14),
+      plot.title = element_text(size = 16, hjust = 0.5)
+      ) +
+    ggtitle(paste0(name," Over  Time"))
   print(plot)
 }
 
@@ -32,31 +39,32 @@ plot_timeseries(data.ts[, "FEDFUNDS_DIFF"], "% CHANGE IN FED EFFECTIVE RATE")
 plot_timeseries(data.ts[, "SP500_DIFF"], "S&P500 RETURNS")
 
 
-scatter_plot = function(x, y, title) {
+scatter_plot = function(data, x, y, title) {
   plot = ggplot(data=data, aes(x=!!sym(x), y=!!sym(y))) +
-    geom_point(aes(color=year)) +
+    geom_point(aes(color=year, text=paste(data$year, "-", data$month))) +
     geom_smooth(method = "lm", se = FALSE) +
     theme_minimal() +
     ggtitle(title)
   print(plot)
+  return(plot)
 }
 
 
 # Change in FEDFUNDS RATE VS sp500
-scatter_plot(x="FEDFUNDS_DIFF", y="SP500_DIFF", title="CHANGE IN FED FUNDS EFFECTIVE RATE VS S&P500 RETURNS")
+scatter_plot(data, x="FEDFUNDS_DIFF", y="SP500_DIFF", title="CHANGE IN FED FUNDS EFFECTIVE RATE VS S&P500 RETURNS")
 ggplotly()
 
 # FEDFUNDS RATE VS sp500
-scatter_plot(x="FEDFUNDS", y="SP500_DIFF", title="FED FUNDS EFFECTIVE RATE VS S&P500 RETURNS")
+scatter_plot(data, x="FEDFUNDS", y="SP500_DIFF", title="FED FUNDS EFFECTIVE RATE VS S&P500 RETURNS")
 
 # Consumption growth vs S&P500 RETURNS
-scatter_plot(x="CONSUMPTION_DIFF", y="SP500_DIFF", title="CONSUMPTION GROWTH VS S&P500 RETURNS")
+scatter_plot(data, x="CONSUMPTION_DIFF", y="SP500_DIFF", title="CONSUMPTION GROWTH VS S&P500 RETURNS")
 
 # log inflation vs S&P500 RETURNS
-scatter_plot(x="log_inflation", y="SP500_DIFF", title="log_inflation VS S&P500 RETURNS")
+scatter_plot(data, x="log_inflation", y="SP500_DIFF", title="log_inflation VS S&P500 RETURNS")
 
 # VOLATILITY_INDEX VS S&P500 RETURNS
-scatter_plot(x="VOLATILITY_INDEX_DIFF", y="SP500_DIFF", title="VOLATILITY_INDEX VS S&P500 RETURNS")
+scatter_plot(data, x="VOLATILITY_INDEX_DIFF", y="SP500_DIFF", title="VOLATILITY_INDEX VS S&P500 RETURNS")
 
 # anticipated policy change bar plot
 # 0 is unanticipated while 1 in anticipated 
